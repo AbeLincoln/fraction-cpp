@@ -7,20 +7,22 @@ class Fraction {
 private:
   int numerator;
   int denominator;
+  void init(int, int);
 public:
   // Constructors
-  Fraction();                     // 0 / 1
-  Fraction(Fraction&);
-  Fraction(int, int);             // x / y
-  Fraction(int);                  // x / 1
-  // TODO Support Fraction(Fraction, Fraction);
+  Fraction();
+  Fraction(const Fraction&);
+  Fraction(int);
+  Fraction(int, int);
+  // TODO Support Fraction(Fraction, Fraction); ?  Is there even a speed-up this would provide?
+  ~Fraction() = default;          // default because the class is trivial
 
   // Accessors
   int getNumerator();
   int getDenominator();
 
   // Helpers
-  Fraction reduce();
+  bool reduce();
   Fraction invert();
 
   // Basic Arithmetic
@@ -35,7 +37,8 @@ public:
   // TODO Implement and extend the '%' operator at the end, if time allows.
 
   // Assignment
-  // TODO Implement and extend the assignment operators, if time allows.
+  Fraction& operator = (const Fraction&);
+  // TODO Implement and extend the other assignment operators, if time allows.
 
   // Comparators
   // TODO Extend '==' operator if time allows
@@ -50,10 +53,9 @@ public:
   // TODO Should implement and extend '>=' operator if other comparators are extended because a user would expect it
 
   // Casting
-  std::string to_string(); 
+  friend std::ostream& operator << (std::ostream&, const Fraction&);
   // TODO Extend 'float()' if time allows
   // TODO Extend 'bool()' at the end, if time allows
-  // TODO Extend '<<' operator if time allows
 
 };
 

@@ -1,24 +1,31 @@
 #include "fraction.h"
+#include <iostream>
 
 // Constructors
 Fraction::Fraction() {
-
+  init(0, 1);
 }
 
-Fraction::Fraction(Fraction& f) {
-  
-}
-
-Fraction::Fraction(int num, int den) {
-  
+Fraction::Fraction(const Fraction& f) {
+  init(f.numerator, f.denominator);
 }
 
 Fraction::Fraction(int num) {
-  
+  init(num, 1);
 }
 
-// TODO Support Fraction(Fraction, Fraction);
+Fraction::Fraction(int num, int den) {
+  init(num, den);
+}
 
+// TODO Support Fraction(Fraction, Fraction) {} ?  Is there even a speed-up this would provide?
+
+// TODO: If converting Fraction to const, get rid of setters
+void Fraction::init(int num, int den) {
+  numerator = num;
+  denominator = den;
+  reduce();
+}
 
 // Accessors
 int Fraction::getNumerator() {
@@ -29,8 +36,9 @@ int Fraction::getDenominator() {
   return denominator;
 }
 
+
 // Helpers
-Fraction Fraction::reduce() {
+bool Fraction::reduce() {
 
 }
 
@@ -64,7 +72,11 @@ Fraction Fraction::divide(Fraction f) {
 
 
 // Assignment
-// TODO Implement and extend the assignment operators, if time allows.
+Fraction& Fraction::operator = (const Fraction& copy) {
+  init(copy.numerator, copy.denominator);
+  return *this;
+}
+// TODO Implement and extend the other assignment operators, if time allows.
 
 
 // Comparators
@@ -94,18 +106,33 @@ bool Fraction::isLessThan(Fraction f) {
 
 
 // Casting
-// TODO Extend '<<' operator if time allows
-std::string Fraction::to_string() {
-  
+// Stream operator as a convenient way to display the fraction.  TODO: Implement some way to define the format to display at the end, if time allows
+std::ostream& operator << (std::ostream& outputStream, const Fraction& f) {
+  outputStream << f.numerator << "/" << f.denominator;
+  return outputStream;
 }
 
 // TODO Extend 'float()' if time allows
 
-// TODO Extend 'bool()' at the end, if time allows
+// TODO Extend 'bool()' at the very end for fun, if time allows
 
-// TODO Extend '<<' operator if time allows
+
+void testConstructors() {
+  std::cout << std::endl << "Testing Fraction constructors!" << std::endl;
+  Fraction defaultFraction = Fraction();
+  std::cout << "Fraction() = " << defaultFraction << std::endl;
+  Fraction integerFraction = Fraction(2);
+  std::cout << "Fraction(2) = " << integerFraction << std::endl;
+  Fraction baseFraction = Fraction(1, 2);
+  std::cout << "Fraction(1,2) = " << baseFraction << std::endl;
+  Fraction assignFraction = Fraction(baseFraction);
+  std::cout << "assignFraction = " << assignFraction << std::endl;
+  Fraction copyFraction = baseFraction;
+  std::cout << "copyFraction = " << copyFraction << std::endl;
+}
 
 
 int main(int argc, char *argv[]) {
-  printf("Basic C++ class for implementing fractions\n");
+  std::cout << "Basic C++ class for implementing fractions" << std::endl;
+  testConstructors();
 }
