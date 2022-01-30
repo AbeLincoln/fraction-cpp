@@ -6,8 +6,10 @@
 class Fraction {
 private:
   int numerator;
-  int denominator;
+  int denominator;  // TODO: At the end, eliminate assignment in init() and have reduce() return the resultant variables instead.  Then denominator can never be negative.
   void init(int, int);
+  int lcm(int, int);
+  int gcd(int, int);
 public:
   // Constructors
   Fraction();
@@ -28,12 +30,16 @@ public:
   // Basic Arithmetic
   // TODO Extend '+' operator if time allows
   Fraction plus(Fraction);
+  Fraction plus(int);
   // TODO Extend '-' operator if time allows
   Fraction minus(Fraction);
+  Fraction minus(int);
   // TODO Extend '*' operator if time allows
   Fraction multiply(Fraction);
+  Fraction multiply(int);
   // TODO Extend '/' operator if time allows
   Fraction divide(Fraction);
+  Fraction divide(int);
   // TODO Implement and extend the '%' operator at the end, if time allows.
 
   // Assignment
