@@ -4,7 +4,7 @@
 /* Assumptions:
  * - We do not have to worry about numbers too large to handle with integers
  * - We do not have to worry about representing complex fractions
- * TODO We could improve arithmetic logic by having intermediate products be handled with longer ints 
+ * TODO We could improve arithmetic logic by having intermediate products be handled with "longer" ints 
 */
 
 // Constructors
@@ -24,15 +24,6 @@ Fraction::Fraction(int num, int den) {
   init(num, den);
 }
 
-// TODO Support Fraction(Fraction, Fraction) {} ?  Is there even a speed-up this would provide?
-
-void Fraction::init(int num, int den) {
-  if (den == 0)
-    throw std::domain_error("Divide by zero error.");
-  numerator = num;
-  denominator = den;
-  reduce();
-}
 
 // Accessors
 int Fraction::getNumerator() {
@@ -45,6 +36,14 @@ int Fraction::getDenominator() {
 
 
 // Helpers
+void Fraction::init(int num, int den) {
+  if (den == 0)
+    throw std::domain_error("Divide by zero error.");
+  numerator = num;
+  denominator = den;
+  reduce();
+}
+
 // sets the fraction to a reduced form, with the sign on the numerator.  If it is already reduced, return true
 bool Fraction::reduce() {
   int gcd = Fraction::gcd(abs(numerator), abs(denominator));
@@ -65,11 +64,7 @@ Fraction Fraction::invert() {
   init(denominator, numerator);
   return *this;
 }
-// TODO confirm we even need this - is reduction faster than LCM saves?  We need to reduce signs anyway
-int Fraction::lcm(int x, int y) {
-  // Minimize integer literal maxima by dividing by gcd first. We know it divides x, so this is safe.
-  return x / gcd(x, y) * y;
-}
+
 // Euclidean Algorithm
 int Fraction::gcd(int x, int y) {
   if (y == 0)
@@ -80,8 +75,15 @@ int Fraction::gcd(int x, int y) {
 
 
 // Basic Arithmetic
-// TODO Extend '+' operator if time allows
-Fraction Fraction::plus(Fraction f) {
+/* Note for all arithmetic (and paired compound assignment) operators:
+ *  - We have to create a copy for the binary arithmetic operator anyway, so we do so in the function header
+ *  - We have to define the paired compound assignment operator anyway, so we use it to define the arithmetic operator to save an extra evaluation of the copy
+*/
+inline Fraction operator + (Fraction leftF, const Fraction& rightF) {
+  leftF += rightF;
+  return leftF;
+}
+Fraction& Fraction::operator += (const Fraction& f) {
   int gcd = Fraction::gcd(denominator, f.denominator); // Denominators from fraction objects are always positive
   /* Minimize integer literal maxima by dividing by gcd first.
    * We know it is a divisor of both denominators, so this is a safe order.
@@ -92,14 +94,12 @@ Fraction Fraction::plus(Fraction f) {
   denominator = (denominator / gcd) * f.denominator;
   return *this;
 }
-Fraction Fraction::plus(int add) {
-  init(numerator + (add * denominator),
-       denominator);
-  return *this;
-}
 
-// TODO Extend '-' operator if time allows
-Fraction Fraction::minus(Fraction f) {
+inline Fraction operator - (Fraction leftF, const Fraction& rightF) {
+  leftF -= rightF;
+  return leftF;
+}
+Fraction& Fraction::operator -= (const Fraction& f) {
   int gcd = Fraction::gcd(denominator, f.denominator); // Denominators from fraction objects are always positive
   /* Minimize integer literal maxima by dividing by gcd first.
    * We know it is a divisor of both denominators, so this is a safe order.
@@ -110,42 +110,32 @@ Fraction Fraction::minus(Fraction f) {
   denominator = (denominator / gcd) * f.denominator;
   return *this;
 }
-Fraction Fraction::minus(int sub) {
-  init(numerator - (sub * denominator),
-       denominator);
-  return *this;
-}
 
-// TODO Extend '*' operator if time allows
-Fraction Fraction::multiply(Fraction f) {
+inline Fraction operator * (Fraction leftF, const Fraction& rightF) {
+  leftF *= rightF;
+  return leftF;
+}
+Fraction& Fraction::operator *= (const Fraction& f) {
   init(numerator * f.numerator,
        denominator * f.denominator);
   return *this;
 }
-Fraction Fraction::multiply(int mul) {
-  init(numerator * mul,
-       denominator);
-  return *this;
-}
 
-// TODO Extend '/' operator if time allows
 // TODO Improve logic if appropriate
-Fraction Fraction::divide(Fraction f) {
+inline Fraction operator / (Fraction leftF, const Fraction& rightF) {
+  leftF /= rightF;
+  return leftF;
+}
+Fraction& Fraction::operator /= (const Fraction& f) {
   if (f.numerator == 0)
     throw std::domain_error("Divide by zero error.");
   init(numerator * f.denominator,
        denominator * f.numerator);
   return *this;
 }
-Fraction Fraction::divide(int div) {
-  if (div == 0)
-    throw std::domain_error("Divide by zero error.");
-  init(numerator,
-       denominator * div);
-  return *this;
-}
 
 // TODO Implement and extend the '%' operator at the end, if time allows?
+// TODO Implement and extend the '%=' operator if the '%' operator is implemented.
 
 
 // Assignment
@@ -153,7 +143,6 @@ Fraction& Fraction::operator = (const Fraction& copy) {
   init(copy.numerator, copy.denominator);
   return *this;
 }
-// TODO Implement and extend the other assignment operators, if time allows.
 
 
 // Comparators
@@ -261,89 +250,72 @@ void testReduction() {
 void testAddition() {
   std::cout << "+ :" << std::endl;
   Fraction seventh = Fraction(1,7);
-  std::cout << "1/7 + 1/7 = " << seventh.plus(seventh) << std::endl;
   Fraction half = Fraction(1,2);
   Fraction quarter = Fraction(1,4);
-  std::cout << "1/2 + 1/4 = " << half.plus(quarter) << std::endl;
-  half = Fraction(1,2);
   Fraction nquarter = Fraction(1,-4);
-  std::cout << "1/2 + (-1/4) = " << half.plus(nquarter) << std::endl;
-  half = Fraction(1,2);
   Fraction nhalf = Fraction(-1,2);
-  std::cout << "(-1/2) + (-1/4) = " << nhalf.plus(nquarter) << std::endl;
   Fraction improper = Fraction(3,2);
-  std::cout << "3/2 + 1/2 = " << improper.plus(half) << std::endl;
-  std::cout << "1/2 + 1 = " << half.plus(1) << std::endl;
+  std::cout << "1/7 + 1/7 = " << (seventh + seventh) << std::endl;
+  std::cout << "1/2 + 1/4 = " << (half + quarter) << std::endl;
+  std::cout << "1/2 + (-1/4) = " << (half + nquarter) << std::endl;
+  std::cout << "(-1/2) + (-1/4) = " << (nhalf + nquarter) << std::endl;
+  std::cout << "3/2 + 1/2 = " << (improper + half) << std::endl;
+  std::cout << "1/2 + 1 = " << (half + 1) << std::endl;
 }
 void testSubtraction() {
   std::cout << "- :" << std::endl;
   Fraction seventh = Fraction(1,7);
-  std::cout << "1/7 - 1/7 = " << seventh.minus(seventh) << std::endl;
   Fraction half = Fraction(1,2);
   Fraction quarter = Fraction(1,4);
-  std::cout << "1/2 - 1/4 = " << half.minus(quarter) << std::endl;
-  half = Fraction(1,2);
   Fraction nquarter = Fraction(1,-4);
-  std::cout << "1/2 - (-1/4) = " << half.minus(nquarter) << std::endl;
   Fraction nhalf = Fraction(-1,2);
-  nquarter = Fraction(1,-4);
-  std::cout << "(-1/2) - (-1/4) = " << nhalf.minus(nquarter) << std::endl;
   Fraction improper = Fraction(3,2);
-  half = Fraction(1,2);
-  std::cout << "3/2 - 1/2 = " << improper.minus(half) << std::endl;
-  half = Fraction(1,2);
-  std::cout << "1/2 - 1 = " << half.minus(1) << std::endl;
+  std::cout << "1/7 - 1/7 = " << (seventh - seventh) << std::endl;
+  std::cout << "1/2 - 1/4 = " << (half - quarter) << std::endl;
+  std::cout << "1/2 - (-1/4) = " << (half - nquarter) << std::endl;
+  std::cout << "(-1/2) - (-1/4) = " << (nhalf - nquarter) << std::endl;
+  std::cout << "3/2 - 1/2 = " << (improper - half) << std::endl;
+  std::cout << "1/2 - 1 = " << (half - 1) << std::endl;
 }
 void testMultiplication() {
   std::cout << "* :" << std::endl;
   Fraction seventh = Fraction(1,7);
-  std::cout << "1/7 * 1/7 = " << seventh.multiply(seventh) << std::endl;
   Fraction half = Fraction(1,2);
   Fraction twofifths = Fraction(2,5);
-  std::cout << "1/2 * 2/5 = " << half.multiply(twofifths) << std::endl;
-  half = Fraction(1,2);
   Fraction nquarter = Fraction(1,-4);
-  std::cout << "1/2 * (-1/4) = " << half.multiply(nquarter) << std::endl;
   Fraction nhalf = Fraction(-1,2);
-  nquarter = Fraction(1,-4);
-  std::cout << "(-1/2) * (-1/4) = " << nhalf.multiply(nquarter) << std::endl;
   Fraction improper = Fraction(3,2);
-  half = Fraction(1,2);
-  std::cout << "3/2 * 1/2 = " << improper.multiply(half) << std::endl;
-  half = Fraction(1,2);
-  std::cout << "1/2 * 2 = " << half.multiply(2) << std::endl;
-  half = Fraction(1,2);
-  std::cout << "1/2 * 0 = " << half.multiply(0) << std::endl;
+  std::cout << "1/7 * 1/7 = " << (seventh * seventh) << std::endl;
+  std::cout << "1/2 * 2/5 = " << (half * twofifths) << std::endl;
+  std::cout << "1/2 * (-1/4) = " << (half * nquarter) << std::endl;
+  std::cout << "(-1/2) * (-1/4) = " << (nhalf * nquarter) << std::endl;
+  std::cout << "3/2 * 1/2 = " << (improper * half) << std::endl;
+  std::cout << "1/2 * 2 = " << (half * 2) << std::endl;
+  std::cout << "1/2 * 0 = " << (half * 0) << std::endl;
 
 }
 void testDivision() {
   std::cout << "/ :" << std::endl;
   Fraction seventh = Fraction(1,7);
-  std::cout << "1/7 / 1/7 = " << seventh.divide(seventh) << std::endl;
   Fraction half = Fraction(1,2);
   Fraction quarter = Fraction(1,4);
-  std::cout << "1/2 / 1/4 = " << half.divide(quarter) << std::endl;
-  half = Fraction(1,2);
   Fraction nquarter = Fraction(1,-4);
-  std::cout << "1/2 / (-1/4) = " << half.divide(nquarter) << std::endl;
   Fraction nhalf = Fraction(-1,2);
-  nquarter = Fraction(1,-4);
-  std::cout << "(-1/2) / (-1/4) = " << nhalf.divide(nquarter) << std::endl;
   Fraction improper = Fraction(3,2);
-  half = Fraction(1,2);
-  std::cout << "3/2 / 1/2 = " << improper.divide(half) << std::endl;
-  half = Fraction(1,2);
-  std::cout << "1/2 / 2 = " << half.divide(2) << std::endl;
-  half = Fraction(1,2);
+  std::cout << "1/7 / 1/7 = " << (seventh / seventh) << std::endl;
+  std::cout << "1/2 / 1/4 = " << (half / quarter) << std::endl;
+  std::cout << "1/2 / (-1/4) = " << (half / nquarter) << std::endl;
+  std::cout << "(-1/2) / (-1/4) = " << (nhalf / nquarter) << std::endl;
+  std::cout << "3/2 / 1/2 = " << (improper / half) << std::endl;
+  std::cout << "1/2 / 2 = " << (half / 2) << std::endl;
   try {
-    std::cout << "1/2 / 0 = " << half.divide(0) << std::endl;
+    std::cout << "1/2 / 0 = " << (half / 0) << std::endl;
   } catch (std::domain_error) {
     std::cout << "We caught a divide by zero error while dividing by zero" << std::endl;
   }
 
 }
 
-// TODO: Clean up sub functions when we switch to arithmetic operator overload, if time allows
 void testArithmetic() {
   std::cout << std::endl << "Testing Fraction arithmetic!" << std::endl;
   testAddition();
@@ -351,18 +323,18 @@ void testArithmetic() {
   testMultiplication();
   testDivision();
   // Inversion
-  std::cout << "1/x :" << std::endl;
   Fraction seventh = Fraction(1,7);
-  std::cout << "1 / (1/7) = " << seventh.invert() << std::endl;
+  std::cout << "1/x :" << std::endl;
   Fraction half = Fraction(1,2);
-  std::cout << "1 / (1/2) = " << half.invert() << std::endl;
   Fraction nquarter = Fraction(1,-4);
-  std::cout << "1 / (-1/4) = " << nquarter.invert() << std::endl;
   Fraction improper = Fraction(3,2);
-  std::cout << "1 / (3/2) = " << improper.invert() << std::endl;
   Fraction one = Fraction(1);
-  std::cout << "1 / (1/1) = " << one.invert() << std::endl;
   Fraction zero = Fraction(0);
+  std::cout << "1 / (1/7) = " << seventh.invert() << std::endl;
+  std::cout << "1 / (1/2) = " << half.invert() << std::endl;
+  std::cout << "1 / (-1/4) = " << nquarter.invert() << std::endl;
+  std::cout << "1 / (3/2) = " << improper.invert() << std::endl;
+  std::cout << "1 / (1/1) = " << one.invert() << std::endl;
   try {
     std::cout << "Fraction() = " << zero.invert() << std::endl;
   } catch (std::domain_error) {
@@ -412,11 +384,11 @@ void testComparison() {
 
 int main(int argc, char *argv[]) {
   std::cout << "Basic C++ class for implementing fractions" << std::endl;
-  //testConstructors();
-  //testErrors();
-  //testReduction();
-  //testArithmetic();
-  //testCasting();
+  testConstructors();
+  testErrors();
+  testReduction();
+  testArithmetic();
+  testCasting();
   testComparison();
 
 }
