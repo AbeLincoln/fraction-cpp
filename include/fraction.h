@@ -6,7 +6,7 @@
 class Fraction {
 private:
   int numerator;
-  int denominator;  // TODO: At the end, eliminate assignment in init() and have reduce() return the resultant variables instead.  Then denominator can never be negative.
+  int denominator;
   void init(int, int);
   int lcm(int, int);
   int gcd(int, int);
@@ -14,10 +14,9 @@ public:
   // Constructors
   Fraction();
   Fraction(const Fraction&);
-  Fraction(int);
+  Fraction(int);                // intentionally left implicit to allow integers to become Fraction objects when using arithmetic
   Fraction(int, int);
-  // TODO Support Fraction(Fraction, Fraction); ?  Is there even a speed-up this would provide?
-  ~Fraction() = default;          // default because the class is trivial
+  ~Fraction() = default;        // default because the class members are all trivial
 
   // Accessors
   int getNumerator();
@@ -27,24 +26,14 @@ public:
   bool reduce();
   Fraction invert();
 
-  // Basic Arithmetic
-  // TODO Extend '+' operator if time allows
-  Fraction plus(Fraction);
-  Fraction plus(int);
-  // TODO Extend '-' operator if time allows
-  Fraction minus(Fraction);
-  Fraction minus(int);
-  // TODO Extend '*' operator if time allows
-  Fraction multiply(Fraction);
-  Fraction multiply(int);
-  // TODO Extend '/' operator if time allows
-  Fraction divide(Fraction);
-  Fraction divide(int);
-  // TODO Implement and extend the '%' operator at the end, if time allows.
+  // Basic Arithmetic defined in `fraction.cpp` file as inline
 
   // Assignment
   Fraction& operator = (const Fraction&);
-  // TODO Implement and extend the other assignment operators, if time allows.
+  Fraction& operator += (const Fraction&);
+  Fraction& operator -= (const Fraction&);
+  Fraction& operator *= (const Fraction&);
+  Fraction& operator /= (const Fraction&);
 
   // Comparators
   bool operator == (const Fraction);
@@ -54,10 +43,13 @@ public:
   bool operator <= (const Fraction);
   bool operator >= (const Fraction);
 
-  // Casting
+  // Displaying
   friend std::ostream& operator << (std::ostream&, const Fraction&);
-  operator float();
-  operator bool();
+
+  // Casting
+  // NOTE: All cast overloads are explicit to prevent our implicit int constructor from looping
+  explicit operator float();
+  explicit operator bool();  // more for fun than function, but can still allow clever C syntax tricks for savvy users
 
 };
 
