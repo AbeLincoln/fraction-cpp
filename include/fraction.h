@@ -6,7 +6,7 @@
 class Fraction {
 private:
   int numerator;
-  int denominator;  // TODO: At the end, eliminate assignment in init() and have reduce() return the resultant variables instead.  Then denominator can never be negative.
+  int denominator;
   void init(int, int);
   int lcm(int, int);
   int gcd(int, int);
@@ -14,9 +14,9 @@ public:
   // Constructors
   Fraction();
   Fraction(const Fraction&);
-  Fraction(int);  // NOTE: Intentionally left implicit to allow integers to become Fraction objects when using arithmetic
+  Fraction(int);                // intentionally left implicit to allow integers to become Fraction objects when using arithmetic
   Fraction(int, int);
-  ~Fraction() = default;          // default because the class members are all trivial
+  ~Fraction() = default;        // default because the class members are all trivial
 
   // Accessors
   int getNumerator();
@@ -34,7 +34,6 @@ public:
   Fraction& operator -= (const Fraction&);
   Fraction& operator *= (const Fraction&);
   Fraction& operator /= (const Fraction&);
-  // TODO Implement and extend the '%=' operator if the '%' operator is implemented.
 
   // Comparators
   bool operator == (const Fraction);

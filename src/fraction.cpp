@@ -2,9 +2,16 @@
 #include <iostream>
 
 /* Assumptions:
- * - We do not have to worry about numbers too large to handle with integers
+ * - We do not have to worry about numbers too large to handle with 32-bit integers
  * - We do not have to worry about representing complex fractions
- * TODO We could improve arithmetic logic by having intermediate products be handled with "longer" ints 
+ * TODO Improve arithmetic logic by having potentially large intermediate products wrapped with "longer" ints
+ *      NOTE: this only works if there exist larger int types than the ones the Fraction members use
+ * TODO Improve comparators by removing the inaccuracy of floats encountered at high precision - I chose floats for now because my 1st algorithm involved large intermediate products
+ * TODO Improve multiplication by using gcd to reduce first.  This removes the liklihood of exceeding Fraction member precision
+ * TODO Improve division by using gcd and reducing directly.  This opens up opportunities to shrink large intermediate products
+ * TODO Improve denominator by making it unsigned and requiring init to reduce first.
+ *      NOTE: this may require an overloaded reduce(int, int) method which returns the reduced numerator and denominator (and can be public)
+ * TODO Improve invert() by removing the call to init and managing the sign directly.  This removes the call to gcd() and additional stack size
 */
 
 // Constructors
@@ -58,6 +65,7 @@ bool Fraction::reduce() {
   return false;
 }
 
+// NOTE: Could be void to prevent copying, but it has value for simplified inline error checking if it returns the result
 Fraction Fraction::invert() {
   if (numerator == 0)
     throw std::domain_error("Divide by zero error.");
@@ -121,7 +129,6 @@ Fraction& Fraction::operator *= (const Fraction& f) {
   return *this;
 }
 
-// TODO Improve logic if appropriate
 inline Fraction operator / (Fraction leftF, const Fraction& rightF) {
   leftF /= rightF;
   return leftF;
@@ -133,9 +140,6 @@ Fraction& Fraction::operator /= (const Fraction& f) {
        denominator * f.numerator);
   return *this;
 }
-
-// TODO Implement and extend the '%' operator at the end, if time allows?
-// TODO Implement and extend the '%=' operator if the '%' operator is implemented.
 
 
 // Assignment
@@ -156,12 +160,24 @@ bool Fraction::operator != (Fraction f) {
   return ((f.numerator != numerator) || (f.denominator != denominator));
 }
 
-// TODO Consider if a manual algorithm is faster than casting
+/* TODO Remove both float casting and integer multiplication from '>' and '<'
+ * TODO This could probably be improved by replacing these two with a slower multi-part loop, based on the following properties of fractions:
+ * 1a. if they are equal, a non-inclusive comparison method is always false
+ * 1b. if their signs do not match, the positive one is larger
+ * 1c. if they are both negative, the result is the opposite of the result of their absolute values
+ * 1d. Thus, after determining their signs, we can represent the problem in terms of (2.) where both numbers must be positive
+ * 2a. if two positive fractions are converted into mixed form, the fraction with a larger integer component is the larger fraction
+ * 2b. if two positive fractions in mixed form have the same integer component, then you can subtract it and compare them as proper fractions
+ * 2c. a positive proper fraction is larger than another if and only if its inverse is smaller than the inverse of the other
+ * 2d. the inverse of a proper fraction must be improper
+ * 2e. Thus, we can recursively represent the comparison of two positive fractions in terms of (2.) by switching the terms after mixed reduction
+ * * This approach reduces the size of the integers at each step, rather than growing them.  So it can be used with arbitrary Fraction member precision
+ * * We can limit the number of times we need to recurse by finding the minimum number of times necessary (all 4 ints half as long) and adding that as a quotient compare base case
+ */
 bool Fraction::operator > (Fraction f) {
   return (float)*this > (float)f;
 }
 
-// TODO Consider if a manual algorithm is faster than casting
 bool Fraction::operator < (Fraction f) {
   return (float)*this < (float)f; 
 }
@@ -190,6 +206,7 @@ std::ostream& operator << (std::ostream& outputStream, const Fraction& f) {
   return outputStream;
 }
 
+// By nature, converting to float is already lossy.  Dividing after converting is no more lossy than any other alternative, it only introduces 3 float operations
 Fraction::operator float() {
   return (float)numerator / (float)denominator;
 }
